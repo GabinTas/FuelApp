@@ -11,8 +11,9 @@ class MyFuelApp extends StatefulWidget {
 }
 
 class _MyFuelApp extends State<MyFuelApp> {
-  Future<List<Station>>? _stationsFuture; // (1)
+  Future<List<Station>>? _stationsFuture;
   final _formKey = GlobalKey<FormState>();
+  bool _triCroissant = true;
 
   final TextEditingController _ville = TextEditingController();
   String _carburantChoisi = 'e10';
@@ -26,14 +27,17 @@ class _MyFuelApp extends State<MyFuelApp> {
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
       setState(() {
-        _stationsFuture = GetStation.fetchStations(_ville.text, _carburantChoisi);
+        _stationsFuture = GetStation.fetchStations(
+          _ville.text,
+          _carburantChoisi,
+        );
       });
     }
   }
 
   @override
   void initState() {
-    super.initState(); // (2)
+    super.initState();
   }
 
   @override
@@ -42,7 +46,7 @@ class _MyFuelApp extends State<MyFuelApp> {
       appBar: AppBar(title: const Text('Fuel App')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column( // (3)
+        child: Column(
           children: [
             Form(
               key: _formKey,
@@ -59,12 +63,12 @@ class _MyFuelApp extends State<MyFuelApp> {
                       if (value == null || value.isEmpty) {
                         return 'Veuillez écrire le nom de la ville';
                       }
-                      return null; // (4)
+                      return null;
                     },
                   ),
                   const SizedBox(height: 16),
 
-                  DropdownButtonFormField<String>( // (5)
+                  DropdownButtonFormField<String>(
                     initialValue: _carburantChoisi,
                     decoration: const InputDecoration(
                       labelText: 'Carburant',
@@ -93,14 +97,30 @@ class _MyFuelApp extends State<MyFuelApp> {
                       child: const Text('Soumettre'),
                     ),
                   ),
+                  if (_stationsFuture != null)
+                    IconButton(
+                      icon: Icon(
+                        _triCroissant
+                            ? Icons.arrow_upward
+                            : Icons.arrow_downward,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _triCroissant = !_triCroissant;
+                        });
+                      },
+                    ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
 
-            if (_stationsFuture != null) // (6)
+            if (_stationsFuture != null)
               Expanded(
-                child: StationResults(stationsFuture: _stationsFuture!),
+                child: StationResults(
+                  stationsFuture: _stationsFuture!,
+                  triCroissant: _triCroissant,
+                ),
               ),
           ],
         ),
@@ -110,24 +130,49 @@ class _MyFuelApp extends State<MyFuelApp> {
 }
 
 class StationResults extends StatelessWidget {
-  const StationResults({super.key, required this.stationsFuture});
+  const StationResults({
+    super.key,
+    required this.stationsFuture,
+    required this.triCroissant,
+  });
   final Future<List<Station>> stationsFuture;
+  final bool triCroissant;
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Station>>(
       future: stationsFuture,
       builder: (context, snapshot) {
+        // Gestion d'erreur réseau
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
           return Center(child: Text('Erreur : ${snapshot.error}'));
         }
+
+        // Traitement des données
         final stations = snapshot.data!;
+
         if (stations.isEmpty) {
           return const Center(child: Text('Aucune station trouvée.'));
         }
+
+        // Tri
+        if (triCroissant) {
+          stations.sort((a, b) {
+            if (a.prix == null) return 1;
+            if (b.prix == null) return -1;
+            return a.prix!.compareTo(b.prix!);
+          });
+        } else {
+          stations.sort((a, b) {
+            if (a.prix == null) return 1;
+            if (b.prix == null) return -1;
+            return b.prix!.compareTo(a.prix!);
+          });
+        }
+
         return ListView.builder(
           itemCount: stations.length,
           itemBuilder: (context, index) {
@@ -155,7 +200,7 @@ class StationResults extends StatelessWidget {
                     Text('${station.ville} - ${station.cp}'),
                     const SizedBox(height: 8),
                     Text(
-                      station.prix != null ? '${station.prix} €': 'N/A',
+                      station.prix != null ? '${station.prix} €' : 'N/A',
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -163,9 +208,13 @@ class StationResults extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      station.rupture_stock ? 'Rupture (${station.rupture_type})' : 'Disponible',
+                      station.rupture_stock
+                          ? 'Rupture (${station.rupture_type})'
+                          : 'Disponible',
                       style: TextStyle(
-                        color: station.rupture_stock ? Colors.red : Colors.green,
+                        color: station.rupture_stock
+                            ? Colors.red
+                            : Colors.green,
                       ),
                     ),
                   ],

@@ -10,7 +10,6 @@ Projet personnel réalisé pour apprendre Flutter en profondeur, en consommant u
 - Filtrage par type de carburant (Gazole, SP95, SP95-E10, SP98, E85, GPLc)
 - Tri des résultats par prix croissant
 - Gestion des ruptures de stock : distinction entre "station qui ne possède pas cette pompe" (masquée) et "rupture temporaire/définitive" (affichée avec le prix en N/A)
-- Recherche insensible à la casse et aux accents
 
 ## 🛠️ Stack technique
 
