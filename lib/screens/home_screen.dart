@@ -14,6 +14,7 @@ class _MyFuelApp extends State<MyFuelApp> {
   Future<List<Station>>? _stationsFuture;
   final _formKey = GlobalKey<FormState>();
   bool _triCroissant = true;
+  bool _formulaireVisible = true;
 
   final TextEditingController _ville = TextEditingController();
   String _carburantChoisi = 'e10';
@@ -31,6 +32,7 @@ class _MyFuelApp extends State<MyFuelApp> {
           _ville.text,
           _carburantChoisi,
         );
+        _formulaireVisible = false;
       });
     }
   }
@@ -43,76 +45,92 @@ class _MyFuelApp extends State<MyFuelApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Fuel App')),
+      appBar: AppBar(
+        title: const Text('Fuel App'),
+        actions: [
+          TextButton(
+            onPressed: () => {
+              setState(() {
+                _formulaireVisible = true;
+              }),
+            },
+            child: const Text("Rechercher"),
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextFormField(
-                    controller: _ville,
-                    decoration: const InputDecoration(
-                      labelText: 'Ville',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Veuillez écrire le nom de la ville';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-
-                  DropdownButtonFormField<String>(
-                    initialValue: _carburantChoisi,
-                    decoration: const InputDecoration(
-                      labelText: 'Carburant',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: 'gazole', child: Text('Gazole')),
-                      DropdownMenuItem(value: 'sp95', child: Text('SP95')),
-                      DropdownMenuItem(value: 'e10', child: Text('SP95-E10')),
-                      DropdownMenuItem(value: 'sp98', child: Text('SP98')),
-                      DropdownMenuItem(value: 'e85', child: Text('E85')),
-                      DropdownMenuItem(value: 'gplc', child: Text('GPLc')),
-                    ],
-                    onChanged: (value) {
-                      setState(() {
-                        _carburantChoisi = value!;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 20),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _submitForm,
-                      child: const Text('Soumettre'),
-                    ),
-                  ),
-                  if (_stationsFuture != null)
-                    IconButton(
-                      icon: Icon(
-                        _triCroissant
-                            ? Icons.arrow_upward
-                            : Icons.arrow_downward,
+            if (_formulaireVisible == true)
+              Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextFormField(
+                      controller: _ville,
+                      decoration: const InputDecoration(
+                        labelText: 'Ville',
+                        border: OutlineInputBorder(),
                       ),
-                      onPressed: () {
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Veuillez écrire le nom de la ville';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    DropdownButtonFormField<String>(
+                      initialValue: _carburantChoisi,
+                      decoration: const InputDecoration(
+                        labelText: 'Carburant',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'gazole',
+                          child: Text('Gazole'),
+                        ),
+                        DropdownMenuItem(value: 'sp95', child: Text('SP95')),
+                        DropdownMenuItem(value: 'e10', child: Text('SP95-E10')),
+                        DropdownMenuItem(value: 'sp98', child: Text('SP98')),
+                        DropdownMenuItem(value: 'e85', child: Text('E85')),
+                        DropdownMenuItem(value: 'gplc', child: Text('GPLc')),
+                      ],
+                      onChanged: (value) {
                         setState(() {
-                          _triCroissant = !_triCroissant;
+                          _carburantChoisi = value!;
                         });
                       },
                     ),
-                ],
+                    const SizedBox(height: 20),
+
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _submitForm,
+                        child: const Text('Soumettre'),
+                      ),
+                    ),
+                    if (_stationsFuture != null)
+                      IconButton(
+                        icon: Icon(
+                          _triCroissant
+                              ? Icons.arrow_upward
+                              : Icons.arrow_downward,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _triCroissant = !_triCroissant;
+                          });
+                        },
+                      ),
+                  ],
+                ),
               ),
-            ),
             const SizedBox(height: 16),
 
             if (_stationsFuture != null)
