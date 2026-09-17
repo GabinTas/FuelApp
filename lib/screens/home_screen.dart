@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/station.dart';
 import '../services/fuel_api.dart';
+import 'station_detail_screen.dart';
 
 class MyFuelApp extends StatefulWidget {
   const MyFuelApp({super.key, required this.title});
@@ -203,39 +204,50 @@ class StationResults extends StatelessWidget {
                 borderRadius: BorderRadius.circular(15),
                 side: const BorderSide(color: Colors.blue, width: 2),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      station.adresse,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          StationDetailScreen(station: station),
                     ),
-                    Text('${station.ville} - ${station.cp}'),
-                    const SizedBox(height: 8),
-                    Text(
-                      station.prix != null ? '${station.prix} €' : 'N/A',
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue,
+                  );
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        station.adresse,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
-                    ),
-                    Text(
-                      station.rupture_stock
-                          ? 'Rupture (${station.rupture_type})'
-                          : 'Disponible',
-                      style: TextStyle(
-                        color: station.rupture_stock
-                            ? Colors.red
-                            : Colors.green,
+                      Text('${station.ville} - ${station.cp}'),
+                      const SizedBox(height: 8),
+                      Text(
+                        station.prix != null ? '${station.prix} €' : 'N/A',
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                        ),
                       ),
-                    ),
-                  ],
+                      Text(
+                        station.rupture_stock
+                            ? 'Rupture (${station.rupture_type})'
+                            : 'Disponible',
+                        style: TextStyle(
+                          color: station.rupture_stock
+                              ? Colors.red
+                              : Colors.green,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
