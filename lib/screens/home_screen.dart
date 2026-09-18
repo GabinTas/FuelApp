@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import '../models/station.dart';
+import '../models/commune.dart';
 import '../services/fuel_api.dart';
+import '../services/geo_api.dart';
 import 'station_detail_screen.dart';
 
 class MyFuelApp extends StatefulWidget {
@@ -16,6 +19,8 @@ class _MyFuelApp extends State<MyFuelApp> {
   final _formKey = GlobalKey<FormState>();
   bool _triCroissant = true;
   bool _formulaireVisible = true;
+  List<Commune> _suggestions = [];
+  Timer? _debounce;
 
   final TextEditingController _ville = TextEditingController();
   String _carburantChoisi = 'e10';
@@ -23,6 +28,7 @@ class _MyFuelApp extends State<MyFuelApp> {
   @override
   void dispose() {
     _ville.dispose();
+    _debounce?.cancel();
     super.dispose();
   }
 
@@ -36,6 +42,16 @@ class _MyFuelApp extends State<MyFuelApp> {
         _formulaireVisible = false;
       });
     }
+  }
+
+  void _onVilleChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () async {
+      final resultats = await GeoApi.searchCommunes(query);
+      setState(() {
+        _suggestions = resultats;
+      });
+    });
   }
 
   @override
@@ -75,6 +91,7 @@ class _MyFuelApp extends State<MyFuelApp> {
                         labelText: 'Ville',
                         border: OutlineInputBorder(),
                       ),
+                      onChanged: _onVilleChanged,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Veuillez écrire le nom de la ville';
@@ -82,6 +99,23 @@ class _MyFuelApp extends State<MyFuelApp> {
                         return null;
                       },
                     ),
+                    if (_suggestions.isNotEmpty)
+                      Column(
+                        children: _suggestions.map((commune) {
+                          return ListTile(
+                            title: Text(commune.nom),
+                            subtitle: Text(
+                              '${commune.codePostal} (${commune.codeDepartement})',
+                            ),
+                            onTap: () {
+                              setState(() {
+                                _ville.text = commune.nom;
+                                _suggestions = [];
+                              });
+                            },
+                          );
+                        }).toList(),
+                      ),
                     const SizedBox(height: 16),
 
                     DropdownButtonFormField<String>(
